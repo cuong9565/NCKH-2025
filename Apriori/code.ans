@@ -1,0 +1,14 @@
+Danh sach L (Tap muc pho bien): 
+{Banh mi}
+{Banh mi,Sua}
+{Banh mi,Trung}
+{Bo}
+{Bo,Sua}
+{Sua}
+{Sua,Trung}
+{Trung}
+
+Luat ket hop: 
+{Trung} => {Banh mi}
+{Bo} => {Sua}
+{Trung} => {Sua}
