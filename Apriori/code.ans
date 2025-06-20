@@ -1,14 +1,9 @@
 Danh sach L (Tap muc pho bien): 
-{Banh mi}
-{Banh mi,Sua}
-{Banh mi,Trung}
-{Bo}
-{Bo,Sua}
-{Sua}
-{Sua,Trung}
-{Trung}
-
-Luat ket hop: 
-{Trung} => {Banh mi}
-{Bo} => {Sua}
-{Trung} => {Sua}
+{Banh mi} 6
+{Banh mi,Sua} 3
+{Banh mi,Trung} 3
+{Bo} 5
+{Bo,Sua} 3
+{Sua} 6
+{Sua,Trung} 3
+{Trung} 5

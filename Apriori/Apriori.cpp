@@ -12,45 +12,61 @@ typedef long double ld;
 typedef unsigned long long ull;
 
 struct item{
+    // Variable
     set<string>se;
 
+    // Constructor
     item(){}
-    item(string str){
-        se.insert(str);
-    }
-    item(vector<string>vt){
-        for(string x: vt)
-            se.insert(x);
-    }
+    item(string str){ add(str); }
+    item(vector<string>vt){ for(string x: vt) add(x); }
+
+    // Operator
+    bool operator<(const item &o)const{ return se < o.se; }
+
+    // Function
+    void add(string str){ se.insert(str); }
     string display(){
         string str="{";
         if(se.size()>0){
-            for(string x: se)
-                str+= x+",";
+            for(string x: se) str+= x+",";
             str.pop_back();
         }
         str+="}";
         return str;
     }
-    bool operator<(const item &o)const{
-        return se < o.se;
-    }
+
 };
 
 const ll maxN = 1e4+7;
 
 ll n;
 map<string,ll> a[maxN]; // De bai
-set<item>se_all_item, L, L_k, L_temp;
-vector<pair<item,item>>Law;
-map<item,ll>C, mp_support;
-double min_sup, min_conf;
+set<item>se_all_item, L, L_k;
+map<item,ll>mp_support;
+double min_sup;
 
+item try_merge(item it_a, item it_b){
+    item it;
+    for(string x: it_a.se) it.add(x);
+    for(string x: it_b.se) it.add(x);
 
-// Bo bien de sinh
-vector<ll>vt_sinh;
-vector<vector<ll>>vt_sinh_list;
-ll n_sinh;
+    // Ngoai tru truong hop chi co 2 phan tu
+    if(it_a.se.size()==1 && it.se.size()==2) return it;
+
+    // Kiem tra dieu kien item
+    if(it.se.size()-1!=it_a.se.size()) return item();
+
+    // Kiem tra apriori
+    vector<string>vt;
+    for(string x: it.se) {
+        if(it_a.se.find(x)==it_a.se.end() || it_b.se.find(x)==it_b.se.end()){
+            vt.pb(x);
+        }
+    }
+    if(L.find(item(vt))==L.end()) return item();
+
+    return it;
+}
 
 vector<item> convert_to_vector(set<item>se){
     vector<item>vt;
@@ -61,13 +77,6 @@ vector<string> convert_to_vector(item it){
     vector<string>vt;
     for(auto x: it.se) vt.pb(x);
     return vt;
-}
-
-item merge_item(item a, item b){
-    item i;
-    for(string x: a.se) i.se.insert(x);
-    for(string x: b.se) i.se.insert(x);
-    return i;
 }
 
 ll cal_support(item it){
@@ -88,42 +97,8 @@ ll cal_support(item it){
     return mp_support[it];
 }
 
-void dfs(ll u){
-    for(ll i=0; i<=1; i++) {
-        vt_sinh.pb(i);
-        if(u==n_sinh){
-            ll cnt = 0;
-            for(ll x: vt_sinh) cnt+=x;
-            if(cnt>0 && cnt<n_sinh) {
-                vt_sinh_list.pb(vt_sinh);
-            }
-        }
-        else dfs(u+1);
-        vt_sinh.pop_back();
-    }
-}
-
-bool is_frequently(item it){
-    vector<string> vt_item = convert_to_vector(it);
-    n_sinh = it.se.size();
-    vt_sinh_list.clear();
-    vt_sinh.clear();
-
-    dfs(1);
-
-    for(auto x: vt_sinh_list){
-        item i_temp;
-        f0(i,n_sinh) if(x[i]==1) {
-            i_temp.se.insert(vt_item[i]);
-        }
-        if(L.find(i_temp)==L.end()) return false;
-    }
-
-    return true;
-}
-
 void doc(){
-    cin >> n >> min_sup >> min_conf; cin.ignore();
+    cin >> n >> min_sup; cin.ignore();
     f1(i,n){
         string str; getline(cin, str);
         stringstream ss(str);
@@ -136,64 +111,32 @@ void doc(){
     }
 }
 
-void Buoc1(){
-    // Tim L_k;
+void init(){
     for(auto x: se_all_item){
         double db = cal_support(x)*1.0/n;
-//        cout << x.display() << ' ' << cal_support(x) << ' ' << db, el;
         if(db>=min_sup) L_k.insert(x);
     }
-    //
-
     L = L_k;
 }
 
-void Buock(){
-    C.clear();
+void lap(){
+    set<item>L_temp;
     vector<item>vt = convert_to_vector(L_k);
-    L_k.clear();
 
     ll n_vt = vt.size();
     for(ll i=0; i<n_vt-1; i++){
         for(ll j=i+1; j<n_vt; j++){
-            item i_temp = merge_item(vt[i], vt[j]);
-            if(!is_frequently(i_temp)) continue;
+            item it = try_merge(vt[i], vt[j]);
+            if(it.se.empty()) continue;
 
             // Tim L_k
-            double db = cal_support(i_temp)*1.0/n;
-            if(db>=min_sup) L_k.insert(i_temp);
-            //
+            double db = cal_support(it)*1.0/n;
+            if(db>=min_sup) L_temp.insert(it);
         }
     }
 
+    L_k = L_temp;
     for(auto x: L_k) L.insert(x);
-}
-
-void SinhLuat(){
-    for(auto it: L) if(it.se.size()>=2){
-        ll it_support = cal_support(it); // support(A U B)
-        vector<string> vt_item = convert_to_vector(it);
-        n_sinh = it.se.size();
-        vt_sinh_list.clear();
-        vt_sinh.clear();
-
-        dfs(1);
-
-        for(auto x: vt_sinh_list){
-            item i_temp_a, i_temp_b;
-            f0(i,n_sinh) switch(x[i]){
-                case 0: i_temp_a.se.insert(vt_item[i]); break;
-                case 1: i_temp_b.se.insert(vt_item[i]); break;
-            }
-            ll a_support = cal_support(i_temp_a);
-
-            // Kiem tra dieu kien luat
-            double db = it_support*1.0/a_support;
-            if(db>=min_conf) Law.pb({i_temp_a, i_temp_b});
-            //
-        }
-
-    }
 }
 
 signed main(){
@@ -203,20 +146,10 @@ signed main(){
     freopen("code.ans", "w", stdout);
     #endif // demo
 
-    doc(); // Doc trong file
-    Buoc1(); // Thuc hien buoc 1
-    while(L_k.size()>0){
-        Buock(); // Thuc hien buoc k tim L
-    }
+    doc(); // Doc file
+    init(); // Khoi tao L
+    while(L_k.size()>0) lap(); // Lap den khi L_k rong
     cout << "Danh sach L (Tap muc pho bien): ", el;
-    for(auto x: L)
-        cout << x.display(), el;
-    el;
 
-    // Tao luat
-    SinhLuat();
-    cout << "Luat ket hop: ", el;
-    for(auto [u,v]: Law){
-        cout << u.display() << " => " << v.display(), el;
-    }
+    for(auto x: L) cout << x.display() << ' ' << mp_support[x], el;
 }

@@ -38,14 +38,8 @@ struct item{
 };
 
 ll n;
-double min_sup, min_conf;
+double min_sup;
 map<item,set<ll>>tid_list, L, L_k;
-vector<pair<item,item>>Law;
-
-// Bo bien de sinh
-vector<ll>vt_sinh;
-vector<vector<ll>>vt_sinh_list;
-ll n_sinh;
 
 vector<string> convert_to_vector(item it){
     vector<string>vt;
@@ -87,23 +81,8 @@ item try_merge(item it_a, item it_b){
     return it;
 }
 
-void dfs(ll u){
-    for(ll i=0; i<=1; i++) {
-        vt_sinh.pb(i);
-        if(u==n_sinh){
-            ll cnt = 0;
-            for(ll x: vt_sinh) cnt+=x;
-            if(cnt>0 && cnt<n_sinh) {
-                vt_sinh_list.pb(vt_sinh);
-            }
-        }
-        else dfs(u+1);
-        vt_sinh.pop_back();
-    }
-}
-
 void doc(){
-    cin >> n >> min_sup >> min_conf; cin.ignore();
+    cin >> n >> min_sup; cin.ignore();
     f1(i,n){
         string str; getline(cin, str);
         stringstream ss(str);
@@ -143,32 +122,6 @@ void Lap(){
     for(auto [u,v]: L_k) L[u] = v;
 }
 
-void Sinh_Luat(){
-    for(auto [u,v]: L){
-        item it = u;
-        set<ll>se = v;
-        if(it.se.size()>=2){
-            vector<string> vt_item = convert_to_vector(it);
-            n_sinh = it.se.size();
-            vt_sinh_list.clear();
-            vt_sinh.clear();
-
-            dfs(1);
-            for(auto x: vt_sinh_list){
-                item i_temp_a, i_temp_b;
-                f0(i,n_sinh) switch(x[i]){
-                    case 0: i_temp_a.se.insert(vt_item[i]); break;
-                    case 1: i_temp_b.se.insert(vt_item[i]); break;
-                }
-
-                // Kiem tra dieu kien luat
-                double db = se.size()*1.0/L[i_temp_a].size();
-                if(db>=min_conf) Law.pb({i_temp_a, i_temp_b});
-            }
-        }
-    }
-}
-
 signed main(){
     tm_opt;
     #ifdef demo
@@ -187,12 +140,5 @@ signed main(){
         cout << it.display() << " => ";
         for(ll x: se) cout << x << ' ';
         el;
-    }
-    el;
-
-    Sinh_Luat();
-    cout << "Luat ket hop: ", el;
-    for(auto [u,v]: Law){
-        cout << u.display() << " => " << v.display(), el;
     }
 }
