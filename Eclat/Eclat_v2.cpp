@@ -104,7 +104,7 @@ void solve_eclat(){
 signed main(){
     tm_opt;
     #ifdef demo
-    freopen("sinh.inp", "r", stdin);
+    freopen("sinh_2.inp", "r", stdin);
     freopen("code.ans", "w", stdout);
     #endif // demo
     doc();
