@@ -1,9 +1,19 @@
-Danh sach L (Tap muc pho bien): 
-{Banh mi} 6
-{Banh mi,Sua} 3
-{Banh mi,Trung} 3
-{Bo} 5
-{Bo,Sua} 3
-{Sua} 6
-{Sua,Trung} 3
-{Trung} 5
+Danh sach tap muc thuong xuyen: 
+{A} => 6
+{B} => 8
+{C} => 7
+{D} => 6
+{E} => 7
+{A,B} => 4
+{A,C} => 4
+{A,D} => 3
+{A,E} => 4
+{B,C} => 5
+{B,D} => 5
+{B,E} => 5
+{C,D} => 3
+{C,E} => 5
+{D,E} => 4
+{A,C,E} => 3
+{B,C,E} => 3
+{B,D,E} => 3
