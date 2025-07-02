@@ -14,129 +14,97 @@ struct PPCode{
 };
 
 struct NList{
-    vector<int>item;
-    vector<PPCode>nl;
+    vector<int>items;
+    vector<PPCode>ppcs;
     int cnt;
 
-    NList(){cnt=0;}
+    NList(){cnt = 0;}
 
     string get_item(){
         string str = "{";
-        if(item.size()>0){
-            str+=to_string(item[0]);
-            for(int i=1; i<item.size(); i++) str += "," + to_string(item[i]);
+        if(items.size()>0){
+            str+=to_string(items[0]);
+            for(int i=1; i<items.size(); i++) str += "," + to_string(items[i]);
         }
-        str+="}";
+        str += + ":" + to_string(cnt) + "}";
         return str;
     }
 };
 
 struct Node{
-    int id, h, cnt, pre, post;
-    unordered_map<int, Node*>children;
+    int id, pre, post, cnt;
+    map<int,Node*>children;
 
-    Node(){
-        h = id = pre = post = 0;
-        cnt = 1;
-    }
-
-    Node(int id, int h): id(id), h(h), cnt(1), pre(0), post(0){}
-
+    Node(){ id = pre = post = -1; cnt = 1;}
     Node *insert_by_id(int id){
-        if(children.find(id)==children.end()){
-            Node *new_node = new Node(id, h+1);
-            children[id] = new_node;
-        }
-        else{
+        if(children.find(id)!=children.end()){
             children[id]->cnt++;
         }
+        else{
+            Node *new_child = new Node();
+            new_child->id = id;
+            children[id] = new_child;
+        }
+
         return children[id];
     }
 };
 
-int n, minsup, idPre, idPos; // So dong, nguong ho tro toi thieu, gan Pre, gan Post
-float min_sup = 0.3;
-vector<vector<int>>transactions; // Tap giao dich
-vector<vector<int>>freq;
+int n, minsup, idPre, idPost; // So giao dich trong csdl, nguong toi thieu, Pre, Post
+float min_sup = 0.3; // Nguong toi thieu vo`i 0<x<1
+vector<vector<int>>transactions; // Danh sach cac giao dich
 Node *root = new Node();
 
-unordered_map<int,int>mp_count_support; // dem support trong transaction
+unordered_map<int,int>sup_1_itemset;
+unordered_map<int,NList>mp_nlists;
 vector<NList>vt_nlists;
+vector<int>F, F1, F2;
+vector<NList>freq;
 
-void dfsPrePost(Node *curr){
-    curr->pre=idPre++;
-    for(auto [u,v]: curr->children) dfsPrePost(v);
-    curr->post=idPos++;
+void dfs_pre_post(Node *curr){
+    curr->pre = idPre++;
+    for(auto [u,v]: curr->children) dfs_pre_post(v);
+    curr->post = idPost++;
 }
 
-void buildNLists(Node *curr){
+void dfs_build_nlists(Node *curr){
     if(curr!=root){
-        if(vt_nlists[curr->id].cnt==0) vt_nlists[curr->id].item.pb(curr->id);
-        vt_nlists[curr->id].nl.pb({curr->pre, curr->post, curr->cnt});
-        vt_nlists[curr->id].cnt += curr->cnt;
+        NList &nlist = mp_nlists[curr->id];
+        if(nlist.items.empty())
+            nlist.items.pb(curr->id);
+
+        nlist.ppcs.pb({curr->pre, curr->post, curr->cnt});
+        nlist.cnt += curr->cnt;
     }
-    for(auto [u,v]: curr->children) buildNLists(v);
+    for(auto [u,v]: curr->children) dfs_build_nlists(v);
 }
 
 NList intersection(const NList &a, const NList &b){
     NList c;
     int i = 0, j = 0;
-    while(i<a.nl.size() && j<b.nl.size()){
-        if(a.nl[i].pre < b.nl[j].pre){
-            if (a.nl[i].post > b.nl[j].post){
-                if(c.nl.size() && c.nl.back().pre == a.nl[i].pre){
-                    c.nl.back().cnt += b.nl[j].cnt;
+    while(i<a.ppcs.size() && j<b.ppcs.size()){
+        if(a.ppcs[i].pre < b.ppcs[j].pre){
+            if (a.ppcs[i].post > b.ppcs[j].post){
+                if(c.ppcs.size() && c.ppcs.back().pre == a.ppcs[i].pre){
+                    c.ppcs.back().cnt += b.ppcs[j].cnt;
                 }
                 else{
-                    c.nl.pb({a.nl[i].pre, a.nl[i].post, b.nl[j].cnt});
+                    c.ppcs.pb({a.ppcs[i].pre, a.ppcs[i].post, b.ppcs[j].cnt});
                 }
-                c.cnt += b.nl[j].cnt;
+                c.cnt += b.ppcs[j].cnt;
                 j++;
             } else i++;
         } else j++;
     }
-    c.item = a.item;
-    c.item.pb(b.item.front());
+    c.items = b.items;
+    c.items.pb(a.items.back());
     return c;
-}
-
-void doc(){
-    // Doc tung dong
-    string str, s;
-    while(getline(cin, str)){
-        stringstream ss(str);
-        vector<int>transaction;
-        while(getline(ss, s, ' ')) {
-            int val = stoi(s);
-            transaction.pb(val);
-            mp_count_support[val]++;
-        }
-        transactions.pb(transaction);
-        n++;
-    }
-    minsup = min_sup * n;
-
-    // Loc va sap xep transaction theo thu tu support
-    for(vector<int> &transaction: transactions){
-        vector<int>tr;
-
-        // Loc cac phan tu trong transaction co support >= minsup
-        for(int x: transaction) if(mp_count_support[x]>=minsup) tr.pb(x);
-
-        // Sap xep thu tu cac transaction
-        sort(all(tr), [&](const int a, const int b){
-            if(mp_count_support[a]!=mp_count_support[b]) return mp_count_support[a]>mp_count_support[b];
-            return a<b;
-        });
-
-        if(tr.size()) transaction = tr;
-    }
 }
 
 void eclat(vector<NList>vt_nlists){
     int n = vt_nlists.size();
     for(int i=0; i<n; i++){
-        freq.pb(vt_nlists[i].item);
+        freq.pb(vt_nlists[i]);
         vector<NList>new_vt_nlists;
         for(int j=i+1; j<n; j++){
             NList nl = intersection(vt_nlists[j], vt_nlists[i]);
@@ -146,52 +114,79 @@ void eclat(vector<NList>vt_nlists){
     }
 }
 
-void solve(){
-    // Chen du lieu vao cay PPC
-    for(vector<int> &transaction: transactions){
-        Node *curr = root;
-        for(int x: transaction)
-            curr = curr->insert_by_id(x);
+void doc(){
+    string str, s; // Chuoi mot dong, chuoi tung item
+
+    while(getline(cin, str)){
+        stringstream ss(str);
+
+        vector<int>transaction;
+        while(getline(ss,s,' ')){
+            int x = stoi(s);
+            transaction.pb(x);
+            sup_1_itemset[x]++;
+        }
+
+        transactions.pb(transaction);
+        n++;
+    }
+    minsup = min_sup * n;
+
+    // Loc va sap xep lai cac giao dich
+    for(auto &transaction: transactions){
+
+        vector<int>tr;
+
+        // Loc cac itemset >= minsup
+        for(int &x: transaction) if(sup_1_itemset[x]>=minsup) tr.pb(x);
+
+        // Sap xep lai transaction theo thu tu cua F1
+        sort(all(tr), [&](const int a, const int b){
+             if(sup_1_itemset[a]!=sup_1_itemset[b]) return sup_1_itemset[a]>sup_1_itemset[b];
+             return a<b;
+        });
+
+        transaction = tr;
     }
 
-    // Tim PrePost
-    idPre = idPos = 0;
-    dfsPrePost(root);
+    // Xay dung cay PPC
+    for(vector<int> &transaction: transactions){
+        Node *curr = root;
+        for(int &x: transaction) curr = curr->insert_by_id(x);
+    }
 
-    // Tao NList
-    vt_nlists.resize(mp_count_support.size()+1);
-    buildNLists(root);
+    // De quy tim Pre, Post
+    dfs_pre_post(root);
 
-    // Loc lai NList
-    vector<NList>vt_fill;
-    for(NList &x: vt_nlists) if(x.cnt>=minsup) vt_fill.pb(x);
-    vt_nlists = vt_fill;
+    // Tao mp_nlists
+    dfs_build_nlists(root);
+
+    // Chuyen mp_nlists => vt_nlists
+    for(auto &[u,v]: mp_nlists) vt_nlists.pb(v);
 
     // Sap xep lai vt_nlists
-    sort(all(vt_nlists), [&](const NList &a, const NList &b){
-        if(mp_count_support[a.item[0]]!=mp_count_support[b.item[0]])
-            return mp_count_support[a.item[0]]<mp_count_support[b.item[0]];
-        return a.item[0] > b.item[0];
+    sort(all(vt_nlists), [&](const NList a, const NList b){
+        if(sup_1_itemset[a.items[0]]!=sup_1_itemset[b.items[0]])
+            return sup_1_itemset[a.items[0]]<sup_1_itemset[b.items[0]];
+        return a.items[0]>b.items[0];
     });
 
-    // Goi Eclat
+    // Goi eclats
     eclat(vt_nlists);
 }
 
 signed main(){
     tm_opt;
     #ifdef demo
-    freopen("sinh.inp", "r", stdin);
-//    freopen("code.ans", "w", stdout);
+    freopen("chess.txt", "r", stdin);
+    freopen("code1.ans", "w", stdout);
     #endif // demo
 
     auto start = high_resolution_clock::now();
-    doc();
-    solve();
+    doc(); // Doc transaction trong csdl
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
+//    for(NList &x: freq) cout << x.get_item(), el;
     cout << freq.size(), el;
     cout << duration.count() << " ms" , el;
 }
-
-
