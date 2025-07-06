@@ -1,0 +1,20 @@
+6
+7 5
+7 6
+5 1
+5 2
+6 3
+6 4
+4
+0.5 0.3 1.0 0.8
+3
+2 0 1 0
+0 1 0 3
+1 0 2 1
+
+// dong dau la so dong bieu dien cay phan cap
+    // n dong sau bieu dien quan he u la cha v
+// dong ke bieu dien utility cua m tap con
+    // m dong ke bieu dien utility cua tap tu 1 den m
+// dong ke bieu dien t giao dich
+    // giao dich vi tri t_k la weight cua item k (k=1->m)

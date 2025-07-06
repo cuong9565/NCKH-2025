@@ -26,7 +26,8 @@ struct NList{
             str+=to_string(items[0]);
             for(int i=1; i<items.size(); i++) str += "," + to_string(items[i]);
         }
-        str += + ":" + to_string(cnt) + "}";
+//        str += + ":" + to_string(cnt) + "}";
+        str += "}";
         return str;
     }
 };
@@ -51,7 +52,7 @@ struct Node{
 };
 
 int n, minsup, idPre, idPost; // So giao dich trong csdl, nguong toi thieu, Pre, Post
-float min_sup = 0.3; // Nguong toi thieu vo`i 0<x<1
+float min_sup = 0.7; // Nguong toi thieu vo`i 0<x<1
 vector<vector<int>>transactions; // Danh sach cac giao dich
 Node *root = new Node();
 
@@ -186,7 +187,7 @@ signed main(){
     doc(); // Doc transaction trong csdl
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
-//    for(NList &x: freq) cout << x.get_item(), el;
+    for(NList &x: freq) cout << x.get_item(), el;
     cout << freq.size(), el;
     cout << duration.count() << " ms" , el;
 }

@@ -19,6 +19,7 @@ struct NList{
     int cnt;
 
     NList(){cnt = 0;}
+    NList(vector<int>items){this->items = items; cnt = 0;}
 
     string get_item(){
         string str = "{";
@@ -28,6 +29,10 @@ struct NList{
         }
         str+="}";
         return str;
+    }
+
+    bool operator==(const NList &x) const{
+        return items == x.items;
     }
 };
 
@@ -57,9 +62,38 @@ Node *root = new Node();
 
 unordered_map<int,int>sup_1_itemset;
 unordered_map<int,NList>mp_nlists;
-vector<NList>vt_nlists;
-vector<int>F, F1, F2;
+vector<NList>F1, F2; // Tap muc thuong xuyen cap i
 vector<NList>freq;
+
+
+// Bo bien de sinh
+vector<int>vt_sinh;
+vector<vector<int>>vt_sinh_list;
+int n_sinh;
+
+void dfs(int u){
+    for(int i=0; i<=1; i++) {
+        vt_sinh.pb(i);
+        if(u==n_sinh) vt_sinh_list.pb(vt_sinh);
+        else dfs(u+1);
+        vt_sinh.pop_back();
+    }
+}
+
+void Sinh_Tap(vector<int>itemset, vector<int>candidate){
+    n_sinh = candidate.size();
+    vt_sinh_list.clear();
+    vt_sinh.clear();
+    dfs(1);
+
+    for(vector<int> x: vt_sinh_list){
+        vector<int>cand = itemset;
+        f0(i,n_sinh) switch(x[i]){
+            case 1: cand.pb(candidate[i]); break;
+        }
+        if(cand!=itemset) freq.pb(NList(cand));
+    }
+}
 
 void dfs_pre_post(Node *curr){
     curr->pre = idPre++;
@@ -101,16 +135,33 @@ NList intersection(const NList &a, const NList &b){
     return c;
 }
 
-void eclat(vector<NList>vt_nlists){
+void eclat(vector<NList>vt_nlists, NList nl_check){
     int n = vt_nlists.size();
-    for(int i=0; i<n; i++){
+    for(int i=0; i<n; i++) {
+        if(vt_nlists[i]==nl_check) break;
         freq.pb(vt_nlists[i]);
         vector<NList>new_vt_nlists;
+        vector<int>equivalent_item;
+        NList nl_equivalent_item;
+
         for(int j=i+1; j<n; j++){
-            NList nl = intersection(vt_nlists[j], vt_nlists[i]);
-            if(nl.cnt>=minsup) new_vt_nlists.pb(nl);
+            NList P = intersection(vt_nlists[j], vt_nlists[i]);
+
+            if(P.cnt>=minsup){
+                if(P.cnt==vt_nlists[i].cnt){
+                    equivalent_item.pb(vt_nlists[j].items.back());
+                    if(nl_equivalent_item.items.size()==0) nl_equivalent_item = P;
+                }
+                else{
+                    equivalent_item.clear();
+                    nl_equivalent_item = NList();
+                }
+                new_vt_nlists.pb(P);
+            }
         }
-        eclat(new_vt_nlists);
+
+        eclat(new_vt_nlists, nl_equivalent_item);
+        if(equivalent_item.size()) Sinh_Tap(vt_nlists[i].items, equivalent_item);
     }
 }
 
@@ -161,18 +212,18 @@ void doc(){
     // Tao mp_nlists
     dfs_build_nlists(root);
 
-    // Chuyen mp_nlists => vt_nlists
-    for(auto &[u,v]: mp_nlists) vt_nlists.pb(v);
+    // Chuyen mp_nlists => F1
+    for(auto &[u,v]: mp_nlists) F1.pb(v);
 
-    // Sap xep lai vt_nlists
-    sort(all(vt_nlists), [&](const NList a, const NList b){
+    // Sap xep lai F1
+    sort(all(F1), [&](const NList a, const NList b){
         if(sup_1_itemset[a.items[0]]!=sup_1_itemset[b.items[0]])
             return sup_1_itemset[a.items[0]]<sup_1_itemset[b.items[0]];
         return a.items[0]>b.items[0];
     });
 
-    // Goi eclats
-    eclat(vt_nlists);
+    // Goi eclat
+    eclat(F1, NList());
 }
 
 signed main(){
@@ -186,6 +237,7 @@ signed main(){
     doc(); // Doc transaction trong csdl
     auto stop = high_resolution_clock::now();
     auto duration = duration_cast<milliseconds>(stop - start);
+//    for(NList &x: freq) cout << x.get_item(), el;
     cout << freq.size(), el;
     cout << duration.count() << " ms" , el;
 }
